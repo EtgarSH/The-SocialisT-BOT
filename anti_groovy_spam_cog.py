@@ -1,17 +1,22 @@
 import discord
+from discord.ext import commands
 
-from config import DISCORD_BOT_TOKEN
 
-
-class AntiGroovySpamBot(discord.Client):
+class AntiGroovySpamCog(commands.Cog):
     LOGIN_MESSAGE = "Logged in as {}"
     DIRECT_SPAM_ALERT_MESSAGE = "Please write commands in the Groovy Commands channel!"
 
-    async def on_ready(self):
-        print(self.LOGIN_MESSAGE.format(self.user))
+    def __init__(self, bot: commands.Bot):
+        super(AntiGroovySpamCog, self).__init__()
+        self.__bot = bot
 
+    @commands.Cog.listener()
+    async def on_ready(self):
+        print(self.LOGIN_MESSAGE.format(self.__bot.user.name))
+
+    @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        if message.author == self.user:
+        if message.author == self.__bot.user:
             return
 
         if message.content:
@@ -26,8 +31,3 @@ class AntiGroovySpamBot(discord.Client):
     @staticmethod
     def __is_in_groovy_commands_channel(message: discord.Message):
         return message.channel.name == 'groovy-commands'
-
-
-if __name__ == "__main__":
-    bot = AntiGroovySpamBot()
-    bot.run(DISCORD_BOT_TOKEN)
