@@ -21,7 +21,7 @@ class AntiGroovySpamBot(discord.Client):
 
     @staticmethod
     def __is_command(message: discord.Message):
-        return message.content and message.content[0] == '-'
+        return message.content and (message.content[0] == '-' or message.content[0] == '$')
 
     @staticmethod
     def __is_in_groovy_commands_channel(message: discord.Message):
