@@ -1,8 +1,8 @@
 from discord.ext import commands
 
-from anti_groovy_spam_cog import AntiGroovySpamCog
+from cogs.anti_groovy_spam_cog import AntiGroovySpamCog
 from config import DISCORD_BOT_TOKEN
-from music_cog import MusicCog
+from cogs.music_cog import MusicCog
 
 
 def main():
