@@ -11,11 +11,13 @@ class AntiGroovySpamBot(discord.Client):
         print(self.LOGIN_MESSAGE.format(self.user))
 
     async def on_message(self, message: discord.Message):
+        if message.author == self.user:
+            return
+
         if message.content:
             if self.__is_command(message) and not self.__is_in_groovy_commands_channel(message):
-                private_channel = await self.start_private_message(message.author)
-                await self.send_message(private_channel, self.DIRECT_SPAM_ALERT_MESSAGE)
-                await self.delete_message(message)
+                await message.author.send(self.DIRECT_SPAM_ALERT_MESSAGE)
+                await message.delete()
 
     @staticmethod
     def __is_command(message: discord.Message):
