@@ -61,7 +61,14 @@ class MusicCog(commands.Cog):
 
     @commands.command()
     async def play(self, ctx: Context, url: str):
-        await ctx.send("Hang on! Playing your requested song!")
+        await ctx.send("Hang on! Playing your requested song! Have a nice CoronaTime!")
 
         voice: VoiceClient = get(self.__voice_clients, guild=ctx.guild)
         await self.__play(voice, url)
+
+    @commands.command()
+    async def stop(self, ctx: Context):
+        await ctx.send("Stopping the song...")
+
+        voice: VoiceClient = get(self.__voice_clients, guild=ctx.guild)
+        voice.stop()
