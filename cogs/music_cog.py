@@ -1,14 +1,14 @@
 import os
-from typing import List
+from typing import List, Dict
 
 import discord
 import youtube_dl
-from discord import Message, ChannelType, VoiceChannel, Guild, VoiceClient, AudioSource
+from discord import VoiceChannel, Guild, VoiceClient
 from discord.ext import commands
 from discord.ext.commands import Context
 from discord.utils import get
 
-from config import DISCORD_BOT_TOKEN, DEFAULT_YTDL_OPTS, DEFAULT_YOUTUBE_SONG_NAME, DEFAULT_YTDL_FORMAT
+from config import DEFAULT_YTDL_OPTS, DEFAULT_YOUTUBE_SONG_NAME, DEFAULT_YTDL_FORMAT, SONGS_DIR
 
 
 class MusicCog(commands.Cog):
@@ -26,24 +26,28 @@ class MusicCog(commands.Cog):
         await guild.voice_client.disconnect()
 
     async def __play(self, voice: VoiceClient, url: str):
-        self.__download_song(url)
+        song_path = self.__download_song(url, voice)
 
         if voice.is_playing():
             voice.stop()
-        voice.play(discord.FFmpegPCMAudio(DEFAULT_YOUTUBE_SONG_NAME))
+        voice.play(discord.FFmpegPCMAudio(song_path))
         voice.volume = 100
 
     @staticmethod
-    def __download_song(url):
-        song_there = os.path.isfile(DEFAULT_YOUTUBE_SONG_NAME)
-        if song_there:
-            os.remove(DEFAULT_YOUTUBE_SONG_NAME)
+    def __download_song(url: str, voice_client: VoiceClient) -> str:
+        song_name = voice_client.server_id
+        path = os.path.join(SONGS_DIR, str("{}.{}".format(song_name, DEFAULT_YTDL_FORMAT)))
 
-        with youtube_dl.YoutubeDL(DEFAULT_YTDL_OPTS) as ydl:
+        song_there = os.path.isfile(path)
+        if song_there:
+            os.remove(path)
+
+        opts = DEFAULT_YTDL_OPTS.copy()
+        opts["outtmpl"] = path
+        with youtube_dl.YoutubeDL(opts) as ydl:
             ydl.download([url])
-        for file in os.listdir("./"):
-            if file.endswith(DEFAULT_YTDL_FORMAT):
-                os.rename(file, DEFAULT_YOUTUBE_SONG_NAME)
+
+        return path
 
     @commands.Cog.listener()
     async def on_ready(self):
