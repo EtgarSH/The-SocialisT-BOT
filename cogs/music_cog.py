@@ -8,7 +8,7 @@ from discord.ext import commands
 from discord.ext.commands import Context
 from discord.utils import get
 
-from config import DEFAULT_YTDL_OPTS, DEFAULT_YOUTUBE_SONG_NAME, DEFAULT_YTDL_FORMAT, SONGS_DIR
+from config import DEFAULT_YTDL_OPTS, DEFAULT_YTDL_FORMAT, SONGS_DIR
 
 
 class MusicCog(commands.Cog):

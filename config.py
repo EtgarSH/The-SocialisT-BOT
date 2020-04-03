@@ -12,5 +12,3 @@ DEFAULT_YTDL_OPTS = {
         'preferredquality': '192',
     }],
 }
-
-DEFAULT_YOUTUBE_SONG_NAME = "song.{}".format(DEFAULT_YTDL_FORMAT)
