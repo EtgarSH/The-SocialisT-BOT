@@ -13,7 +13,7 @@ class SocialQueue(Generic[T1]):
     def add_participant_queue(self, participant: 'Queue[T1]'):
         self.__participant_queues.put(participant)
 
-    def next(self):
+    def next(self) -> T1:
         current_participant = self.__participant_queues.next()
         if current_participant.empty():
             return self.next()
