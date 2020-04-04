@@ -1,8 +1,13 @@
 from discord.ext import commands
 
 from cogs.anti_groovy_spam_cog import AntiGroovySpamCog
-from config import DISCORD_BOT_TOKEN
+from config import DISCORD_BOT_TOKEN_PATH
 from cogs.music_cog import MusicCog
+
+
+def load_discord_token() -> str:
+    with open(DISCORD_BOT_TOKEN_PATH, 'r') as token_file:
+        return token_file.read()
 
 
 def main():
@@ -11,7 +16,7 @@ def main():
     bot.add_cog(MusicCog(bot))
     bot.add_cog(AntiGroovySpamCog(bot))
 
-    bot.run(DISCORD_BOT_TOKEN)
+    bot.run(load_discord_token())
 
 
 if __name__ == "__main__":
