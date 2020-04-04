@@ -1,13 +1,15 @@
 import os
+from queue import Queue
 from typing import List, Dict
 
 import discord
 import youtube_dl
-from discord import VoiceChannel, Guild, VoiceClient
+from discord import VoiceChannel, Guild, VoiceClient, User
 from discord.ext import commands
 from discord.ext.commands import Context
 from discord.utils import get
 
+from cogs.model.social_queue import SocialQueue
 from config import DEFAULT_YTDL_OPTS, DEFAULT_YTDL_FORMAT, SONGS_DIR
 
 
@@ -17,6 +19,9 @@ class MusicCog(commands.Cog):
         self.__bot = bot
         self.__voice_clients: List[VoiceClient] = []
 
+        self.__social_queues_by_guild: Dict[Guild, SocialQueue[str]] = {}
+        self.__participant_queues_by_user_id: Dict[str, Queue[str]] = {}
+
     async def __connect_to_voice_channel(self, voice_channel: VoiceChannel):
         voice_client = await voice_channel.connect()
         self.__voice_clients.append(voice_client)
@@ -25,13 +30,26 @@ class MusicCog(commands.Cog):
         self.__voice_clients.remove(guild.voice_client)
         await guild.voice_client.disconnect()
 
-    async def __play(self, voice: VoiceClient, url: str):
-        song_path = self.__download_song(url, voice)
+    def __next(self, voice_client: VoiceClient):
+        social_queue = self.__social_queues_by_guild[voice_client.guild]
+        song_path = self.__download_song(social_queue.next(), voice_client)
+        if voice_client.is_playing():
+            voice_client.stop()
 
-        if voice.is_playing():
-            voice.stop()
-        voice.play(discord.FFmpegPCMAudio(song_path))
-        voice.volume = 100
+        voice_client.play(discord.FFmpegPCMAudio(song_path), after=lambda _: self.__next(voice_client))
+        voice_client.volume = 100
+
+    async def __play(self, user: User, voice: VoiceClient, url: str):
+        if user.id not in self.__participant_queues_by_user_id:
+            participant_queue = Queue()
+
+            self.__participant_queues_by_user_id[user.id] = participant_queue
+            self.__social_queues_by_guild[voice.guild].add_participant_queue(participant_queue)
+
+        self.__participant_queues_by_user_id[user.id].put(url)
+
+        if not voice.is_playing():
+            self.__next(voice)
 
     @staticmethod
     def __download_song(url: str, voice_client: VoiceClient) -> str:
@@ -57,6 +75,8 @@ class MusicCog(commands.Cog):
     async def join(self, ctx: Context):
         author = ctx.message.author
         channel = author.voice.channel
+
+        self.__social_queues_by_guild[ctx.guild] = SocialQueue()
         await self.__connect_to_voice_channel(channel)
 
     @commands.command()
@@ -65,10 +85,10 @@ class MusicCog(commands.Cog):
 
     @commands.command()
     async def play(self, ctx: Context, url: str):
-        await ctx.send("Hang on! Playing your requested song! Have a nice CoronaTime!")
+        await ctx.send("Hang on! Queuing your requested song! Have a nice CoronaTime!")
 
         voice: VoiceClient = get(self.__voice_clients, guild=ctx.guild)
-        await self.__play(voice, url)
+        await self.__play(ctx.author, voice, url)
 
     @commands.command()
     async def stop(self, ctx: Context):
