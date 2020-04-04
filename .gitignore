@@ -1,5 +1,6 @@
-# The token is a secret
-discord_token.txt
+# Project untracked files
+/discord_token.txt
+/songs
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
